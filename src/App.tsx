@@ -1,5 +1,8 @@
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable,  type DropResult } from "react-beautiful-dnd";
+import { useRecoilState } from "recoil";
 import styled from "styled-components";
+import { todoState } from "./atom";
+import DragableCard from "./components/DragableCard";
 
 
 const Wrapper = styled.div``
@@ -21,18 +24,21 @@ const Board = styled.div`
   padding: 20px 10px;
 `;
 
-const Card = styled.div`
-  padding:10px 10px;
-  box-sizing: border-box;
-  background-color: ${(props)=>props.theme.cardColor};
-  border-radius:10px;
-  margin-bottom:20px;
-`
 
-const contents = ["a","b","c","d"]
 
 function App() {
-  const onChange = ()=>{}
+  const [todo,setTodo] = useRecoilState(todoState);
+  const onChange = ({destination,source, draggableId}:DropResult)=>{
+    if(!destination) return ;
+    // console.log("sprice",source,"des",destination)
+  
+    setTodo((todos)=>{
+      const copyTodos = [...todos];
+      copyTodos.splice(source.index,1);
+      copyTodos.splice(destination?.index,0,draggableId)
+      return copyTodos
+    })
+  }
   return (
     <DragDropContext onDragEnd={onChange}>
       <Wrapper>
@@ -40,18 +46,8 @@ function App() {
           <Droppable droppableId="one">
             {(magic) => (
               <Board {...magic.droppableProps} ref={magic.innerRef}>
-                {contents.map((item, idx) => (
-                  <Draggable draggableId={item} index={idx}>
-                    {(magic) => (
-                      <Card
-                        ref={magic.innerRef}
-                        {...magic.dragHandleProps}
-                        {...magic.draggableProps}
-                      >
-                        {item}
-                      </Card>
-                    )}
-                  </Draggable>
+                {todo.map((item, idx) => (
+                    <DragableCard todo={item} idx={idx}/>
                 ))}
                 {magic.placeholder}
               </Board>
